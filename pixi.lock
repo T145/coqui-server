@@ -12,6 +12,7 @@ environments:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-2_gnu.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/noarch/aiofiles-24.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-h4bc722e_7.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2024.8.30-hbcca054_0.conda
       - conda: https://conda.anaconda.org/nvidia/linux-64/cuda-cudart-12.4.127-0.tar.bz2
@@ -230,6 +231,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       win-64:
+      - conda: https://conda.anaconda.org/conda-forge/noarch/aiofiles-24.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/bzip2-1.0.8-h2466b09_7.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ca-certificates-2024.8.30-h56e8100_0.conda
       - conda: https://conda.anaconda.org/nvidia/win-64/cuda-cccl-12.6.77-0.conda
@@ -481,6 +483,23 @@ packages:
   url: https://files.pythonhosted.org/packages/a2/ad/e0d3c824784ff121c03cc031f944bc7e139a8f1870ffd2845cc2dd76f6c4/absl_py-2.1.0-py3-none-any.whl
   sha256: 526a04eadab8b4ee719ce68f204172ead1027549089702d99b9059f129ff1308
   requires_python: '>=3.7'
+- kind: conda
+  name: aiofiles
+  version: 24.1.0
+  build: pyhd8ed1ab_0
+  subdir: noarch
+  noarch: python
+  url: https://conda.anaconda.org/conda-forge/noarch/aiofiles-24.1.0-pyhd8ed1ab_0.conda
+  sha256: 952c008a978fa535719c8b8a29f45ab38d337652208dab4d984ab315d7c48dca
+  md5: 4633b8454633369192cb320dd5fb9ccf
+  depends:
+  - python >=3.7
+  license: Apache-2.0
+  license_family: Apache
+  purls:
+  - pkg:pypi/aiofiles?source=hash-mapping
+  size: 19697
+  timestamp: 1719472618255
 - kind: pypi
   name: aiohappyeyeballs
   version: 2.4.3
@@ -883,11 +902,12 @@ packages:
   name: coqui-server
   version: 0.1.0
   path: .
-  sha256: c5689fc5c11c180774932d3ba72bdcec1c02d0106f32d55cd0ee4ce7170027ff
+  sha256: b0ecb7d72e5e92f6707aee27b6f3694f522d37cfd61f1f6e7ee9b14c97333a84
   requires_dist:
   - tts @ git+https://github.com/coqui-ai/TTS
   - ruff>=0.7.2,<0.8
   - fastapi[standard]>=0.115.4,<0.116
+  - aiofiles
   requires_python: '>3.9,<3.10'
   editable: true
 - kind: conda

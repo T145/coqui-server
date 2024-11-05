@@ -13,7 +13,8 @@ RUN /pixi --version
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    TORCHINDUCTOR_UNIQUE_KERNEL_NAMES=1
+    NVIDIA_VISIBLE_DEVICES=all \
+    HF_HOME=/.hf-cache
 
 SHELL ["/bin/bash", "-c"]
 
