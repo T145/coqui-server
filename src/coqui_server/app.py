@@ -20,12 +20,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-has_gpu = torch.cuda.is_available()
+device = "cuda" if torch.cuda.is_available() else "cpu"
 tts_client = TTS(
     model_name="tts_models/en/vctk/vits",
-    progress_bar=False,
-    gpu=has_gpu
-).to("cuda" if has_gpu else "cpu")
+    progress_bar=False
+).to(device)
 
 
 @app.get("/")
