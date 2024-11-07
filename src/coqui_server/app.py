@@ -14,6 +14,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from TTS.api import TTS
 
+STYLES = [
+    {"style": "BOLD", "regex": r"\*\*(.*?)\*\*", "offset": 2},
+    {"style": "ITALIC", "regex": r"\*(.*?)\*", "offset": 1}
+]
+
 app = FastAPI()
 
 origins = ["*", "http://localhost:8000", "http://localhost:3000"]
@@ -37,6 +42,25 @@ def base64_encode(bits: bytes) -> str:
     return str(base64.b64encode(bits), encoding="utf-8")
 
 
+def detect_markdown_styles(text: str):
+    #text_styles = list()
+    message = str(text)
+
+    for style in STYLES:
+        regex = style["regex"]
+        match = re.search(regex, message)
+
+        while match:
+            offset = style["offset"]
+            group = match.group()
+            message = message.replace(group, group[offset:-offset], 1)
+            #text_styles.append({"style": style["style"], "start": match.start(), "length": match.end() - match.start() - offset*2})
+            match = re.search(regex, message)
+
+    #return {"message": message, "text_styles": text_styles}
+    return message
+
+
 def clean_text_for_tts(text):
     """Cleans text for better TTS output."""
 
@@ -46,8 +70,11 @@ def clean_text_for_tts(text):
     # Remove emoji
     text = demoji.replace(text, "")
 
+    # Remove Markdown styles
+    #text = detect_markdown_styles(text)
+
     #text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
-    # The artifical intellects seem to pronounce "&" properly
+    # The TTS models seem to pronounce "&" properly
     text = text.replace("%", " percent")
     text = text.replace("*", "-") # "*" is used by the AI to denote lists and spoken by Coqui
     text = text.replace("  +", "  -") # When preceeded by two spaces, a "+" is used to denote sublists
