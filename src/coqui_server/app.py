@@ -1,5 +1,6 @@
 
 import base64
+import os
 import pathlib
 import re
 import tempfile
@@ -40,17 +41,22 @@ def clean_text_for_tts(text):
     """Cleans text for better TTS output."""
 
     # Remove empty lines
-    #text = os.linesep.join([s for s in text.splitlines() if s])
+    text = os.linesep.join([s for s in text.splitlines() if s])
 
     # Remove emoji
     text = demoji.replace(text, "")
 
-    text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
+    #text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
+    # The artifical intellects seem to pronounce "&" properly
     text = text.replace("%", " percent")
     text = text.replace("*", "-") # "*" is used by the AI to denote lists and spoken by Coqui
+    text = text.replace("  +", "  -") # When preceeded by two spaces, a "+" is used to denote sublists
 
-    text = text.replace("\n", " ").replace("\r", "").strip()
+    #text = text.replace("\n", " ").replace("\r", "").strip()
+    text = text.replace("\r", "").strip()
     text = re.sub(" +", " ", text)
+    # Avoid replacing newlines with spaces b/c the TTS AI does well with pausing between breaks.
+    # The statement above removes all spaces, so when an outline is processed the speech sounds unnatural.
 
     return text
 
@@ -69,7 +75,8 @@ async def health_check():
 async def tts(
     text: str = Form(None, description="Text to convert to speech."),
     speaker_id: int = Form(None, description="VCTK speaker as an integer to use. Note that they're shuffled from the original dataset in Coqui."),
-    speed: Optional[float] = Form(1.0, description="Controls the playback speed. Available to tune since some speakers can be VERY fast.")
+    speed: Optional[float] = Form(1.0, description="Controls the playback speed. Available to tune since some speakers can be VERY fast."),
+    encode: Optional[bool] = Form(False, description="Encode the output in base64.")
 ):
     if not text:
         raise HTTPException(
@@ -95,4 +102,8 @@ async def tts(
 
         async with aiofiles.open(wav, "rb") as audio:
             content = await audio.read()
+
+            if encode:
+                content = base64_encode(content)
+
             return Response(content=content, media_type="audio/wav")
