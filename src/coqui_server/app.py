@@ -1,7 +1,12 @@
 
+import base64
+import pathlib
+import re
+import tempfile
 from typing import Optional
 
 import aiofiles
+import demoji
 import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +30,29 @@ tts_client = TTS(
     model_name="tts_models/en/vctk/vits",
     progress_bar=False
 ).to(device)
+
+
+def base64_encode(bits: bytes) -> str:
+    return str(base64.b64encode(bits), encoding="utf-8")
+
+
+def clean_text_for_tts(text):
+    """Cleans text for better TTS output."""
+
+    # Remove empty lines
+    #text = os.linesep.join([s for s in text.splitlines() if s])
+
+    # Remove emoji
+    text = demoji.replace(text, "")
+
+    text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
+    text = text.replace("%", " percent")
+    text = text.replace("*", "-") # "*" is used by the AI to denote lists and spoken by Coqui
+
+    text = text.replace("\n", " ").replace("\r", "").strip()
+    text = re.sub(" +", " ", text)
+
+    return text
 
 
 @app.get("/")
@@ -55,13 +83,16 @@ async def tts(
             detail="Speaker ID must be provided.",
         )
 
-    wav = tts_client.tts_to_file(
-        text=text,
-        speaker=f"p{speaker_id}",
-        speed=speed,
-        file_path="output.wav"
-    )
+    with tempfile.NamedTemporaryFile() as temp:
+        fname = f"{temp.name}.wav"
+        fpath = pathlib.Path(fname)
+        wav = tts_client.tts_to_file(
+            text=clean_text_for_tts(text),
+            speaker=f"p{speaker_id}",
+            speed=speed,
+            file_path=fpath
+        )
 
-    async with aiofiles.open(wav, "rb") as audio:
-        content = await audio.read()
-        return Response(content=content, media_type="audio/wav")
+        async with aiofiles.open(wav, "rb") as audio:
+            content = await audio.read()
+            return Response(content=content, media_type="audio/wav")

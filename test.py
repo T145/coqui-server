@@ -1,8 +1,16 @@
 import requests
 
-# Send the POST request
+
+text = """Hey there Andy! 🌎
+
+The average distance between the Earth and Jupiter varies as both planets follow elliptical orbits around the Sun. The closest point, known as perihelion, occurs when the two planets are about 465 million miles (746 million kilometers) apart, while the farthest point, aphelion, is around 928 million miles (1.5 billion kilometers) away.
+
+On average, though, the Earth is roughly 483.8 million miles (780.3 million kilometers) from Jupiter at its closest and about 483.9 million miles (782.4 million kilometers) away at its farthest.
+
+One more thing to note is that this distance is an estimate since both planets have complex orbital patterns, but 483.8-483.9 million miles seems a pretty reliable average range 👍"""
+
 response = requests.post(url="http://localhost:8000/tts", data={
-    "text": "In the heart of an ancient forest, where the trees whispered secrets of the past, there lived a peculiar rabbit named Luna. Unlike any other rabbit, Luna was born with wings, a rare gift that she had yet to understand the purpose of. Each night, under the glow of the moon, she would gaze up at the stars, wondering if there was more to her existence. One evening, as the forest bathed in silvery moonlight, Luna discovered a clearing she had never seen before. In the center stood a crystal-clear pond that mirrored the night sky. Drawn to its beauty, Luna approached the pond and, for the first time, unfolded her wings. As she touched the water's surface with her paw, the pond rippled, and the reflection of the stars began to swirl.",
+    "text": text,
     "speaker_id": 335
 })
 
