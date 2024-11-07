@@ -71,7 +71,7 @@ def clean_text_for_tts(text):
     text = demoji.replace(text, "")
 
     # Remove Markdown styles
-    #text = detect_markdown_styles(text)
+    text = detect_markdown_styles(text)
 
     #text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
     # The TTS models seem to pronounce "&" properly
