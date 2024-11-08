@@ -168,6 +168,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/13/a3/a812df4e2dd5696d1f351d58b8fe16a405b234ad2886a0dab9183fb78109/pycparser-2.22-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/df/e4/ba44652d562cbf0bf320e0f3810206149c8a4e99cdbf66da82e97ab53a15/pydantic-2.9.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6c/ea/8820f57f0b46e6148ee42d8216b15e8fe3b360944284bbc705bf34fac888/pydantic_core-2.23.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/2a/83/4f3e184618b1847d3b9905adc134ce016d32712151cc2c478d36f09727ef/pyFLAC-3.0.0.tar.gz
       - pypi: https://files.pythonhosted.org/packages/f7/3f/01c8b82017c199075f8f788d0d906b9ffbbc5a47dc9918a945e13d5a2bda/pygments-2.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d2/53/d23a97e0a2c690d40b165d1062e2c4ccc796be458a1ce59f6ba030434663/pynndescent-0.5.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/ec/2eb3cd785efd67806c46c13a17339708ddc346cbb684eade7a6e6f79536a/pyparsing-3.2.0-py3-none-any.whl
@@ -385,6 +386,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/13/a3/a812df4e2dd5696d1f351d58b8fe16a405b234ad2886a0dab9183fb78109/pycparser-2.22-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/df/e4/ba44652d562cbf0bf320e0f3810206149c8a4e99cdbf66da82e97ab53a15/pydantic-2.9.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/98/95/dd7045c4caa2b73d0bf3b989d66b23cfbb7a0ef14ce99db15677a000a953/pydantic_core-2.23.4-cp39-none-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/2a/83/4f3e184618b1847d3b9905adc134ce016d32712151cc2c478d36f09727ef/pyFLAC-3.0.0.tar.gz
       - pypi: https://files.pythonhosted.org/packages/f7/3f/01c8b82017c199075f8f788d0d906b9ffbbc5a47dc9918a945e13d5a2bda/pygments-2.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d2/53/d23a97e0a2c690d40b165d1062e2c4ccc796be458a1ce59f6ba030434663/pynndescent-0.5.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/ec/2eb3cd785efd67806c46c13a17339708ddc346cbb684eade7a6e6f79536a/pyparsing-3.2.0-py3-none-any.whl
@@ -893,13 +895,14 @@ packages:
   name: coqui-server
   version: 0.1.0
   path: .
-  sha256: 875b8b291b949aae8db80f1d47e32b5379ab1237c392c5e2ebae731041b34f6a
+  sha256: ccfd9d4ead91bc5c37de508ac453cbbc4f90f16967e2ec0812827d10aa6434df
   requires_dist:
   - tts @ git+https://github.com/coqui-ai/TTS
   - ruff>=0.7.2,<0.8
   - fastapi[standard]>=0.115.4,<0.116
   - aiofiles
   - demoji>=1.1.0,<2
+  - pyflac>=3.0.0,<4
   requires_python: '>3.9,<3.10'
   editable: true
 - kind: conda
@@ -3376,6 +3379,16 @@ packages:
   sha256: 1498bec4c05c9c787bde9125cfdcc63a41004ff167f495063191b863399b1a29
   requires_dist:
   - typing-extensions>=4.6.0,!=4.7.0
+  requires_python: '>=3.8'
+- kind: pypi
+  name: pyflac
+  version: 3.0.0
+  url: https://files.pythonhosted.org/packages/2a/83/4f3e184618b1847d3b9905adc134ce016d32712151cc2c478d36f09727ef/pyFLAC-3.0.0.tar.gz
+  sha256: 825d920e696f61493249afa2f7fd2fb42d7e7d2884a7b3e8b6ad1d76b5998119
+  requires_dist:
+  - cffi>=1.4.0
+  - numpy>=1.22
+  - soundfile>=0.11
   requires_python: '>=3.8'
 - kind: pypi
   name: pygments

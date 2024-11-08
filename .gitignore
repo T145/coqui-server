@@ -167,3 +167,4 @@ cython_debug/
 
 # project specs
 *.wav
+*.flac

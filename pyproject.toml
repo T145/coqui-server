@@ -1,6 +1,6 @@
 [project]
 authors = [{name = "T145", email = "T145@protonmail.com"}]
-dependencies = ["tts @ git+https://github.com/coqui-ai/TTS", "ruff>=0.7.2,<0.8", "fastapi[standard]>=0.115.4,<0.116", "aiofiles", "demoji>=1.1.0,<2"]
+dependencies = ["tts @ git+https://github.com/coqui-ai/TTS", "ruff>=0.7.2,<0.8", "fastapi[standard]>=0.115.4,<0.116", "aiofiles", "demoji>=1.1.0,<2", "pyflac>=3.0.0,<4"]
 description = "Coqui TTS API server"
 name = "coqui-server"
 requires-python = "> 3.9, < 3.10"

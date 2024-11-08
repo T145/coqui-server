@@ -1,13 +1,11 @@
-
-import base64
 import os
-import pathlib
 import re
 import tempfile
 from typing import Optional
 
 import aiofiles
 import demoji
+import pyflac
 import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,10 +34,6 @@ tts_client = TTS(
     model_name="tts_models/en/vctk/vits",
     progress_bar=False
 ).to(device)
-
-
-def base64_encode(bits: bytes) -> str:
-    return str(base64.b64encode(bits), encoding="utf-8")
 
 
 def detect_markdown_styles(text: str):
@@ -103,7 +97,7 @@ async def tts(
     text: str = Form(None, description="Text to convert to speech."),
     speaker_id: int = Form(None, description="VCTK speaker as an integer to use. Note that they're shuffled from the original dataset in Coqui."),
     speed: Optional[float] = Form(1.0, description="Controls the playback speed. Available to tune since some speakers can be VERY fast."),
-    encode: Optional[bool] = Form(False, description="Encode the output in base64.")
+    compress: Optional[bool] = Form(True, description="Compress the audio into FLAC.")
 ):
     if not text:
         raise HTTPException(
@@ -117,20 +111,25 @@ async def tts(
             detail="Speaker ID must be provided.",
         )
 
-    with tempfile.NamedTemporaryFile() as temp:
-        fname = f"{temp.name}.wav"
-        fpath = pathlib.Path(fname)
+    with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_wav:
         wav = tts_client.tts_to_file(
             text=clean_text_for_tts(text),
             speaker=f"p{speaker_id}",
             speed=speed,
-            file_path=fpath
+            file_path=output_wav.name
         )
 
         async with aiofiles.open(wav, "rb") as audio:
+            if compress:
+                with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
+                    flac_path = output_flac.name
+                    encoder = pyflac.FileEncoder(input_file=wav, output_file=flac_path)
+                    encoder.process()
+                    encoder.finish()
+
+                    async with aiofiles.open(flac_path, "rb") as flac:
+                        content = await flac.read()
+                        return Response(content=content, media_type="audio/flac")
+
             content = await audio.read()
-
-            if encode:
-                content = base64_encode(content)
-
             return Response(content=content, media_type="audio/wav")
