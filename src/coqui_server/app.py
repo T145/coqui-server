@@ -84,7 +84,7 @@ def clean_text_for_tts(text):
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return {"device": device}
 
 
 @app.get("/health")
