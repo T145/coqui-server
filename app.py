@@ -3,13 +3,13 @@ import re
 import tempfile
 from typing import Optional
 
-import aiofiles
 import demoji
 import pyflac
+import soundfile as sf
 import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import FileResponse
 from TTS.api import TTS
 
 STYLES = [
@@ -36,16 +36,16 @@ tts_client = TTS(
 ).to(device)
 
 
-def detect_markdown_styles(text: str):
+def remove_markdown_styles(text: str):
     #text_styles = list()
     message = str(text)
 
     for style in STYLES:
         regex = style["regex"]
+        offset = style["offset"]
         match = re.search(regex, message)
 
         while match:
-            offset = style["offset"]
             group = match.group()
             message = message.replace(group, group[offset:-offset], 1)
             #text_styles.append({"style": style["style"], "start": match.start(), "length": match.end() - match.start() - offset*2})
@@ -64,8 +64,7 @@ def clean_text_for_tts(text):
     # Remove emoji
     text = demoji.replace(text, "")
 
-    # Remove Markdown styles
-    text = detect_markdown_styles(text)
+    text = remove_markdown_styles(text)
 
     #text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
     # The TTS models seem to pronounce "&" properly
@@ -92,7 +91,25 @@ async def health_check():
     return {"status": "ok"}
 
 
-@app.post("/tts", response_class=Response)
+async def encode_flac(input_file, output_file):
+    with sf.SoundFile(input_file, 'r') as wav_file:
+        encoder = pyflac.StreamEncoder(
+            output_file,
+            compression_level=5,
+            blocksize=0,
+            verify=False
+        )
+
+        while True:
+            data = wav_file.read(frames=1024)
+            if len(data) == 0:
+                break
+            encoder.process(data)
+
+        encoder.finish()
+
+
+@app.post("/tts")
 async def tts(
     text: str = Form(None, description="Text to convert to speech."),
     speaker_id: int = Form(None, description="VCTK speaker as an integer to use. Note that they're shuffled from the original dataset in Coqui."),
@@ -112,24 +129,18 @@ async def tts(
         )
 
     with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_wav:
-        wav = tts_client.tts_to_file(
+        wav_file = tts_client.tts_to_file(
             text=clean_text_for_tts(text),
             speaker=f"p{speaker_id}",
             speed=speed,
             file_path=output_wav.name
         )
 
-        async with aiofiles.open(wav, "rb") as audio:
-            if compress:
-                with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
-                    flac_path = output_flac.name
-                    encoder = pyflac.FileEncoder(input_file=wav, output_file=flac_path)
-                    encoder.process()
-                    encoder.finish()
+        if compress:
+            with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
+                flac_file = output_flac.name
 
-                    async with aiofiles.open(flac_path, "rb") as flac:
-                        content = await flac.read()
-                        return Response(content=content, media_type="audio/flac")
+                await encode_flac(wav_file, flac_file)
+                return FileResponse(flac_file, media_type="audio/flac")
 
-            content = await audio.read()
-            return Response(content=content, media_type="audio/wav")
+        return FileResponse(wav_file, media_type="audio/wav")

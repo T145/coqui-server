@@ -1,0 +1,24 @@
+[project]
+authors = ["T145 <T145@protonmail.com>"]
+channels = ["nvidia", "conda-forge", "pytorch"]
+description = "Coqui TTS API server"
+name = "coqui-server"
+platforms = ["win-64", "linux-64"]
+version = "0.1.0"
+
+[tasks]
+start-dev = "fastapi dev app.py"
+start-prod = "fastapi run app.py"
+
+[dependencies]
+python = "3.10.*"
+
+[pypi-dependencies]
+tts = { git = "https://github.com/coqui-ai/TTS" }
+ruff = ">=0.7.3, <0.8"
+pyflac = ">=3.0.0, <4"
+numpy = ">=1.22.0, <2"
+fastapi = { version = ">=0.115.5, <0.116", extras = ["standard"] }
+aiofiles = ">=24.1.0, <25"
+demoji = ">=1.1.0, <2"
+soundfile = ">=0.12.1, <0.13"

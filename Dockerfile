@@ -30,8 +30,7 @@ RUN apt-get update && \
 
 WORKDIR "/root"
 
-COPY src/ src/
-COPY pyproject.toml pixi.lock .
+COPY pyproject.toml pixi.lock app.py .
 
 RUN pixi install
 
