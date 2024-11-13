@@ -1,14 +1,14 @@
 import os
 import re
-import tempfile
 from typing import Optional
 
+import aiofiles
 import demoji
 import pyflac
 import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from TTS.api import TTS
 
 STYLES = [
@@ -109,7 +109,7 @@ async def tts(
             detail="Speaker ID must be provided.",
         )
 
-    with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_wav:
+    async with aiofiles.tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_wav:
         wav_file = tts_client.tts_to_file(
             text=clean_text_for_tts(text),
             speaker=f"p{speaker_id}",
@@ -118,12 +118,16 @@ async def tts(
         )
 
         if compress:
-            with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
+            async with aiofiles.tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
                 flac_file = output_flac.name
                 encoder = pyflac.FileEncoder(input_file=wav_file, output_file=flac_file)
-
                 encoder.process()
                 encoder.finish()
-                return FileResponse(flac_file, media_type="audio/flac")
 
-        return FileResponse(wav_file, media_type="audio/wav")
+                async with aiofiles.open(flac_file, "rb") as flac:
+                    content = await flac.read()
+                    return Response(content=content, media_type="audio/flac")
+
+        async with aiofiles.open(wav_file, "rb") as audio:
+            content = await audio.read()
+            return Response(content=content, media_type="audio/wav")
