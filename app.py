@@ -5,7 +5,6 @@ from typing import Optional
 
 import demoji
 import pyflac
-import soundfile as sf
 import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -91,24 +90,6 @@ async def health_check():
     return {"status": "ok"}
 
 
-async def encode_flac(input_file, output_file):
-    with sf.SoundFile(input_file, 'r') as wav_file:
-        encoder = pyflac.StreamEncoder(
-            output_file,
-            compression_level=5,
-            blocksize=0,
-            verify=False
-        )
-
-        while True:
-            data = wav_file.read(frames=1024)
-            if len(data) == 0:
-                break
-            encoder.process(data)
-
-        encoder.finish()
-
-
 @app.post("/tts")
 async def tts(
     text: str = Form(None, description="Text to convert to speech."),
@@ -139,8 +120,10 @@ async def tts(
         if compress:
             with tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
                 flac_file = output_flac.name
+                encoder = pyflac.FileEncoder(input_file=wav_file, output_file=flac_file)
 
-                await encode_flac(wav_file, flac_file)
+                encoder.process()
+                encoder.finish()
                 return FileResponse(flac_file, media_type="audio/flac")
 
         return FileResponse(wav_file, media_type="audio/wav")
