@@ -77,6 +77,11 @@ def clean_text_for_tts(text):
     # Avoid replacing newlines with spaces b/c the TTS AI does well with pausing between breaks.
     # The statement above removes all spaces, so when an outline is processed the speech sounds unnatural.
 
+    # Update all temperatures
+    text = text.replace("°F", "° Fahrenheit")
+    text = text.replace("°C", "° Celsius")
+    text = text.replace("°K", "° Kelvin")
+
     return text
 
 
