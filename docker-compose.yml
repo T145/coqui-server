@@ -1,0 +1,22 @@
+---
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
+services:
+  coqui:
+    build:
+      dockerfile: Dockerfile
+    container_name: coqui
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+...

@@ -9,5 +9,5 @@ response = requests.post(url="http://localhost:8000/tts", data={
     "compress": compress
 })
 
-with open("myfile.{}".format("flac" if compress else "wav"), mode="bw") as f:
+with open("test.{}".format("flac" if compress else "wav"), mode="bw") as f:
     f.write(response.content)

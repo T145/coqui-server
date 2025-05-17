@@ -1,14 +1,14 @@
-import os
 import re
+from os import linesep
 from typing import Optional
 
 import aiofiles
 import demoji
-import pyflac
-import torch
 from fastapi import FastAPI, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from pyflac import FileEncoder as AudioEncoder
+from torch import cuda
 from TTS.api import TTS
 
 STYLES = [
@@ -17,7 +17,6 @@ STYLES = [
 ]
 
 app = FastAPI()
-
 origins = ["*", "http://localhost:8000", "http://localhost:3000"]
 
 app.add_middleware(
@@ -28,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda" if cuda.is_available() else "cpu"
 tts_client = TTS(
     model_name="tts_models/en/vctk/vits",
     progress_bar=False
@@ -54,28 +53,26 @@ def remove_markdown_styles(text: str):
     return message
 
 
+def replace_asterisk_with_times(expression):
+    # This pattern matches an asterisk that is:
+    # - preceded by either a digit or a closing bracket
+    # - followed by either a digit or an opening bracket
+    # This keeps Markdown bullet points (e.g., "* Item") unchanged.
+    pattern = r'(?<=[\d\)\}\]$])\*(?=[\d\(\{\[$])'
+    return re.sub(pattern, ' times ', expression)
+
+
 def clean_text_for_tts(text):
     """Cleans text for better TTS output."""
 
-    # Remove empty lines
-    text = os.linesep.join([s for s in text.splitlines() if s])
-
-    # Remove emoji
-    text = demoji.replace(text, "")
-
+    text = linesep.join([s for s in text.splitlines() if s]) # Remove empty lines
+    text = demoji.replace(text, "") # Remove emoji
     text = remove_markdown_styles(text)
-
-    #text = text.replace("&", " and ") # Space on both ends to cover cases like Barnes&Noble
-    # The TTS models seem to pronounce "&" properly
-    text = text.replace("%", " percent")
-    text = text.replace("*", "-") # "*" is used by the AI to denote lists and spoken by Coqui
-    text = text.replace("  +", "  -") # When preceeded by two spaces, a "+" is used to denote sublists
-
-    #text = text.replace("\n", " ").replace("\r", "").strip()
-    text = text.replace("\r", "").strip()
-    text = re.sub(" +", " ", text)
-    # Avoid replacing newlines with spaces b/c the TTS AI does well with pausing between breaks.
-    # The statement above removes all spaces, so when an outline is processed the speech sounds unnatural.
+    text = text.replace(" %", "percent").replace("%", " percent")
+    text = replace_asterisk_with_times(text.replace("·", "*")).replace("*", "-") # An "*" is spoken as "asterisk" by Coqui, so we don't want any in the text.
+    text = text.replace("  +", "  -") # When preceeded by two spaces, a "+" is used to denote list items
+    text = text.replace("\r", "").strip() # Avoid replacing newlines with spaces b/c the TTS AI does well with pausing between breaks.
+    text = re.sub(" +", " ", text) # Remove all excess whitespace, so when an outline is spoken the speech sounds more natural.
 
     # Update all temperatures
     text = text.replace("°F", "° Fahrenheit")
@@ -125,7 +122,7 @@ async def tts(
         if compress:
             async with aiofiles.tempfile.NamedTemporaryFile(mode="w+t", delete=True) as output_flac:
                 flac_file = output_flac.name
-                encoder = pyflac.FileEncoder(input_file=wav_file, output_file=flac_file)
+                encoder = AudioEncoder(input_file=wav_file, output_file=flac_file)
                 encoder.process()
                 encoder.finish()
 

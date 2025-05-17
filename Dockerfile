@@ -1,4 +1,4 @@
-ARG PIXI_VERSION=0.34.0
+ARG PIXI_VERSION=0.47.0
 
 FROM ubuntu:24.04 AS builder
 # need to specify the ARG again to make it available in this stage
@@ -10,7 +10,7 @@ RUN curl -Ls \
     -o /pixi && chmod +x /pixi
 RUN /pixi --version
 
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     NVIDIA_VISIBLE_DEVICES=all \

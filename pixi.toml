@@ -1,5 +1,5 @@
 [project]
-authors = ["T145 <T145@protonmail.com>"]
+authors = ["T145 <github@t145.4wrd.cc>"]
 channels = ["nvidia", "conda-forge", "pytorch"]
 description = "Coqui TTS API server"
 name = "coqui-server"
