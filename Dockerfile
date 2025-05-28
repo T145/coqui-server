@@ -1,37 +1,54 @@
-ARG PIXI_VERSION=0.47.0
-
-FROM ubuntu:24.04 AS builder
-# need to specify the ARG again to make it available in this stage
-ARG PIXI_VERSION
-RUN apt-get update && apt-get install -y curl
-# download the musl build since the gnu build is not available on aarch64
-RUN curl -Ls \
-    "https://github.com/prefix-dev/pixi/releases/download/v${PIXI_VERSION}/pixi-$(uname -m)-unknown-linux-musl" \
-    -o /pixi && chmod +x /pixi
-RUN /pixi --version
-
-FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
+FROM pytorch/pytorch:2.7.0-cuda12.6-cudnn9-devel
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    NVIDIA_VISIBLE_DEVICES=all \
-    HF_HOME=/.hf-cache
+    HOST=docker \
+    LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+    DEBIAN_FRONTEND=noninteractive \
+    MPLLOCALFREETYPE=1 \
+    # https://serverfault.com/questions/683605/docker-container-time-timezone-will-not-reflect-changes
+    TZ=America/New_York
 
-SHELL ["/bin/bash", "-c"]
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# https://github.com/prefix-dev/pixi-docker/blob/main/Dockerfile
-COPY --from=builder --chown=root:root --chmod=0555 /pixi /usr/local/bin/pixi
+ARG DEPENDENCIES="  \
+    ca-certificates \
+    curl \
+    build-essential \
+    espeak-ng \
+    libsndfile1-dev \
+    libasound-dev \
+    portaudio19-dev \
+    libportaudio2 \
+    libportaudiocpp0 \
+    ffmpeg \
+    git"
 
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    set -ex && \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >/etc/apt/apt.conf.d/keep-cache && \
+    apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y curl git build-essential espeak-ng libsndfile1-dev && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends ${DEPENDENCIES} && \
+    echo "no" | dpkg-reconfigure dash
 
-WORKDIR "/root"
+# WORKDIR "/root"
 
-COPY pixi.toml pixi.lock app.py .
+# # Install uv and configure deps
+# ADD https://astral.sh/uv/install.sh /uv-installer.sh
+# RUN sh /uv-installer.sh && \
+#     rm /uv-installer.sh
 
-RUN pixi install
+# ENV PATH="/root/.local/bin/:$PATH"
 
-ENTRYPOINT ["pixi", "run", "start-prod"]
+WORKDIR "/app"
+
+COPY pyproject.toml uv.lock app.py requirements.txt ./
+
+# RUN uv sync --locked
+
+RUN python -m pip install --upgrade pip wheel setuptools && \
+    pip install -r requirements.txt
+
+ENTRYPOINT ["fastapi", "run", "app.py"]

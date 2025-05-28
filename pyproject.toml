@@ -1,0 +1,22 @@
+[project]
+name = "coqui-server"
+version = "1.0.0"
+description = "Coqui TTS API server"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "aiofiles>=24.1.0",
+    "coqui-tts[all]",
+    "demoji>=1.1.0",
+    "fastapi[standard]>=0.115.12",
+    "numpy>=2.2.6",
+    "pyflac>=3.0.0",
+    "ruff>=0.11.11",
+    "soundfile>=0.13.1",
+]
+
+[tool.uv.sources]
+coqui-tts = { git = "https://github.com/idiap/coqui-ai-TTS.git" }
+
+[project.scripts]
+api = "fastapi run app.py"
